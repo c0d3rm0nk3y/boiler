@@ -1,0 +1,207 @@
+<link rel="import" href="../../bower_components/google-feeds/google-feeds.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<!--<link rel="import" href="news-article.html">-->
+
+<dom-module id="my-news2">
+  <style>
+    :host { display:block; }
+
+    p { padding: 5px; margin: 5px;}
+    #_status { margin: 50px 10px }
+    #_newsBar { margin: 10px 15px; }
+    #_newsBar > paper-button { margin:5px 20px; }
+    #_pubDate { text-indent: 25px; margin-left: 15px; }
+    ._orgLink { margin-left: 30px; }
+    ._contSnip { margin: 5px; padding: 5px;}
+  </style>
+  <!--go team ram-rod-->
+  <template>
+    <google-feeds id="_feeds"></google-feeds>
+    <span id="status">status: <small><i>{{status}}</i></small></span>
+    <div id="_newsBar">
+      <paper-button on-click="_topStories">Top Stories</paper-button>
+      <paper-button on-click="_world">World</paper-button>
+      <paper-button on-click="_us">U.S.</paper-button>
+      <paper-button on-click="_sci">Science</paper-button>
+      <paper-button on-click="_tech">Tech</paper-button>
+      <paper-button on-click="_spotlight">Spotlight</paper-button>
+    </div>
+    
+   <template is="dom-repeat" items="{{articles}}">
+     <h3>{{item.title}}</h3>
+     <span id="_pubDate"><i><small>{{item.publishedDate}}</small></i></span>
+     <a class="_orgLink" href="{{item.link}}" target="_blank"><small>Original link</small></a>
+     <br><br>
+     <div class="_contSnip">{{item.contentSnippet}}</div>
+   </template>
+  </template>
+  <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script> 
+  <script>
+    (function() {
+      Polymer({
+        is: 'my-news2',
+        properties: {
+          keywords: { type: String, notify:"true", observer: '_keywordsChanged', value:"kitten puppy monkey" },
+          articles: { type: Array, value: [] }
+        },
+        created: function() { 
+          console.log('my-news2.created()..'); 
+          //this.status = 'created()';
+          
+        },
+        ready: function() { this.status = 'ready..'; },
+        attached: function() { 
+          this.status = 'attached..';
+          window.addEventListener('google-feeds-response', this._gResponse.bind(this));
+          this._setupComms();
+        },
+        detached: function() {  console.log('my-news2.detached()..');  },
+        attributeChanged: function(name, type) { console.log('my-news2.attributeChanged()..'); },
+        
+        _setupComms: function() {
+          try {
+            this.status = "setting up comms";
+            this.socket = io('localhost:1518');
+            this.socket.on('connect', this._onConnect.bind(this));
+            this.socket.on('serverStatus', this._onServerStatus.bind(this));
+            this.socket.on('articleRead', this._onArticleRead.bind(this));
+          } catch(ex) { this.status = "_setupComms exception: " + ex; }
+        },
+        
+        _onConnect: function(e) {
+          console.log('_onConnect()...');
+          this.status = 'connected to server...';
+          
+        },
+        _onServerStatus: function(data) { this.status = data.msg; },
+        _onArticleRead: function(article) {
+          console.log('_onArticleRead()..');
+          this.status = 'article has been read.. prepping';
+          if(article.success) {
+            console.log('\tArticle Read success!!');
+            // now find which article it belongs too and add the 
+            // content, text, paragraphs and para to the store
+            this.articles.forEach(function(element, index, array) {
+              if(element.link.trim() === article.link.trim() ) {
+                // found it
+                array[index].text = article.text;
+                array[index].content = article.content;
+                array[index].paragraphs
+                array[index].para = article.para;
+              }
+            });
+          } else {
+            console.log('\tArticle Read failure... sad panda..');
+          }
+          this.articlesIndex = this.articlesIndex + 1;
+          this.status = 'sending next article'
+          // check if still in array range and emit
+          if(this.articlesIndex > this.articles.length) {
+            console.log('\temitting ' + (this.articlesIndex + 1) + ' article...'); 
+            this.socket.emit('readArticle', {link: this.articles[this.articlesIndex].link});
+          }
+          /*
+            1) add data contents to local article by link lookup
+            2) increment index to next in local array
+            3) emit 'readArticle' with the url as the data
+            
+            article {
+              Boolean : success,
+              String : link,
+              String : title,
+              String : content,
+              String : text,
+              [String] : paragraphs,
+              [String] : para
+            }
+          */
+        },
+        
+        _keywordsChanged : function(nVal, oVal) { console.log('\tmy-news2._keywordsChanged(%s, %s)..',nVal, oVal ); },
+        
+        _gResponse : function(e) {
+          /*
+            gfa.LoadFeed.entry in entries : {  *** this is the local store
+              String: title,`
+              String: link,  <** wash me **>
+              String: author,
+              Date: publishedDate,
+              String: contentSnippet,
+              String: content,
+              catagories: [String]
+            },
+          */
+          
+          this.status = "Google feed responde with " + e.detail.feed.entries.length;
+          this.articles = [];
+          for(var i=0; i<e.detail.feed.entries.length; i++) { 
+            if(e.detail.feed.entries[i].link.indexOf('nytimes') === -1) {
+              var art = e.detail.feed.entries[i];
+              art.para = "";
+              art.paragraphs = [];
+              art.text = "Loading..";
+              art.link = this._gup('url', art.link);
+              this.push('articles', art);
+            }
+          }
+          
+          this.articlesIndex = 0;
+          console.log('\temitting first article...');
+          this.status = 'emitting first article..';
+          this.socket.emit('readArticle', {link: this.articles[this.articlesIndex].link});
+          //this.articles = e.detail.feed.entries;
+        },
+        
+        _gup: function( name, link ) {
+          name        = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+          var regexS  = "[\\?&]"+name+"=([^&#]*)";
+          var regex   = new RegExp( regexS );
+          var results = regex.exec( link );
+          if(results === null) return null;
+          else                 return results[1];
+        },
+        
+        
+        _search: function() { console.log('my-news2._search()...'); },
+        _topStories: function() {
+          this.status = "getting Top Stories..";
+          this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss";
+        },
+        _world: function() {
+          this.status = "getting world news..";
+          this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&topic=w&output=rss";
+        },
+        _us: function() {
+          this.status = "getting U.S. news..";
+          this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&topic=n&output=rss";
+        },
+        _sci: function() {
+          this.status = "getting Science news..";
+          this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&topic=snc&output=rss";
+        },
+        _tech: function() {
+          this.status = "getting Technology news..";
+          this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&topic=tc&output=rss";
+        },
+        _spotlight: function() {
+          this.status = "getting Spotlight news..";
+          this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&topic=ir&output=rss";
+        }
+      });
+    })();
+  </script>
+</dom-module>
+
+
+
+<!--<google-feeds id="feeds"></google-feeds>-->
+<!--<input id="iKeywords" class="paper-font-body2" value="{{keywords}}">-->
+<!--<paper-icon-button on-click="_search" icon="search"></paper-icon-button>-->
+<!--<br>-->
+<!--<span>Status: <i>{{status}}</i></span>-->
+<!--<p>{{keywords}}</p>-->
+
+
