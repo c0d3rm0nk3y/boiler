@@ -64,10 +64,10 @@
         _setupComms: function() {
           try {
             this.status = "setting up comms";
-            this.socket = io('localhost:1518');
-            this.socket.on('connect', this._onConnect.bind(this));
-            this.socket.on('serverStatus', this._onServerStatus.bind(this));
-            this.socket.on('articleRead', this._onArticleRead.bind(this));
+//             this.socket = io('localhost:1518');
+//             this.socket.on('connect', this._onConnect.bind(this));
+//             this.socket.on('serverStatus', this._onServerStatus.bind(this));
+//             this.socket.on('articleRead', this._onArticleRead.bind(this));
           } catch(ex) { this.status = "_setupComms exception: " + ex; }
         },
         
@@ -134,7 +134,7 @@
               catagories: [String]
             },
           */
-          
+          console.log("_gResponse()..; ");
           this.status = "Google feed responde with " + e.detail.feed.entries.length;
           this.articles = [];
           for(var i=0; i<e.detail.feed.entries.length; i++) { 
@@ -167,6 +167,7 @@
         
         _search: function() { console.log('my-news2._search()...'); },
         _topStories: function() {
+          console.log('getting top stories');
           this.status = "getting Top Stories..";
           this.$._feeds.feed = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss";
         },

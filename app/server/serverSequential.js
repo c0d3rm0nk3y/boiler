@@ -3,6 +3,9 @@ var http = require('http').Server(app);
 var   io = require('socket.io')(http);
 var    q = require('q');
 
+var   h = require('htmlstrip-native');
+var   o = { include_script: false, include_style: false, compact_whitespace: true };
+
 io.on('connection', function(socket) {
   socket.on('comms', function(data) { incomingMessage(socket, data); } );
   socket.on('readArticles', function(loadFeedObj) { readArticles(socket, loadFeedObj); });
