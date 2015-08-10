@@ -95,7 +95,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </a>
           </paper-menu>
       </div>
-      <paper-header-panel main mode="waterfall">
+      <paper-header-panel main mode="waterfall-tall">
 
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
@@ -109,7 +109,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-icon-button on-click="search" icon="search"></paper-icon-button>
 
           <!-- Application name -->
-          <div class="middle paper-font-display2 app-name">News whore or bust!</div>
+          <div class="middle paper-font-display2 app-name">datawhore</div>
 
           <!-- Application sub title -->
           <div class="bottom title"></div>
@@ -121,7 +121,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
 
             <section data-route="home">
-              <paper-material elevation="1">
+              <paper-material elevation="5">
                 
               </paper-material>
 
@@ -157,7 +157,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <section data-route="news">
               <paper-material elevation="1">
                 <!--<my-news keywords="{{keywords}}"></my-news>-->
-                <my-news2 keywords="kitten puppy kitty"> </my-news2>
+                <!--<my-news2 keywords="kitten puppy kitty"> </my-news2> -->\
+                <google-news></google-news>
               </paper-material>
             </section>
 

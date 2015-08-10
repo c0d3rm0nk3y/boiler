@@ -5,3 +5,4 @@
   * sequential with an emit for the entire processing of articles
   * lets be _honest_ if you do not do sequential you will nuke rate limiting or get banned.. 
   * singular readArticle requests entirely emitted by the client as the user chooses which articles they want to get the content for
+4. try markdown-js node module.  this could be used for a damn fast easy way to view articles

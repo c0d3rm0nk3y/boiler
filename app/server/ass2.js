@@ -34,8 +34,8 @@ exports.readArticle = function(loadFeedEntryObj) {
 var stripUrl = function(url) {
   console.log('server.ass.stripUrl()...');
   try {
-  return gup('url', url);
-  }catch(ex) { console.log('\tserver.ass.stripUrl() ex: %s', ex); }
+    return gup('url', url);
+  } catch(ex) { console.log('\tserver.ass.stripUrl() ex: %s', ex); }
 };
 
 var getParagraphs = function(objReadability) {
