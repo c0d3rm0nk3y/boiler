@@ -1,0 +1,1 @@
+1.  Make google-news element open dialog when clicked.  This is how settings could be baked in
